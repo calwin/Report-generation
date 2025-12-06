@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PQR Checklist - Report Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .form-section {
+            padding: 30px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .checkbox-group {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .checkbox-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 10px;
+            margin-top: 3px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-item label {
+            font-weight: 400;
+            color: #666;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert.active {
+            display: block;
+        }
+
+        .required {
+            color: #e74c3c;
+        }
+    </style>
+    <script src="{{ url_for('static', filename='pqr_templates.js') }}"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ELECTRICAL WORKS / ELECTRICAL MAINTENANCE</h1>
+            <p>PQR CHECKLIST - Standing Committee Report Generator</p>
+        </div>
+
+        <div class="form-section">
+            <div id="alert" class="alert"></div>
+
+            <form id="pqrForm">
+                <!-- Basic Information -->
+                <div class="section-title">Basic Information</div>
+
+                <div class="form-group">
+                    <label for="work_name">Name of Work <span class="required">*</span></label>
+                    <input type="text" id="work_name" name="work_name" required
+                           placeholder="e.g., Electrical Works / Electrical Maintenance Works">
+                </div>
+
+                <div class="form-group">
+                    <label for="work_period">Period of Work <span class="required">*</span></label>
+                    <input type="text" id="work_period" name="work_period" required
+                           placeholder="e.g., 24 months from start of work">
+                </div>
+
+                <div class="form-group">
+                    <label for="work_nature">Nature of Work <span class="required">*</span></label>
+                    <select id="work_nature" name="work_nature" required>
+                        <option value="">Select...</option>
+                        <option value="AMC">AMC (Annual Maintenance Contract)</option>
+                        <option value="BMC">BMC (Biennial Maintenance Contract)</option>
+                        <option value="AMC/BMC/Short Term">AMC/BMC/Short Term</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="work_type">Work Type / Category</label>
+                    <select id="work_type" name="work_type">
+                        <option value="">Select Work Type to Auto-Fill PQR...</option>
+                        <option value="electrical">Electrical</option>
+                        <option value="general_electrical">General Electrical Works / Electrical Maintenance Works</option>
+                        <option value="boiler">Boiler Maintenance Works</option>
+                        <option value="turbine">Turbine</option>
+                        <option value="ahs">AHS (Ash Handling System)</option>
+                        <option value="chs">CHS (Coal Handling System)</option>
+                        <option value="ci">C&I (Controls & Instrumentation)</option>
+                        <option value="desalination">Desalination/WTP</option>
+                        <option value="civil_construction">Civil Construction / Building Works</option>
+                        <option value="civil_maintenance">Civil Maintenance Works</option>
+                        <option value="water_supply">Water Supply / Drainage Works</option>
+                        <option value="road_works">Road Works / Road Maintenance Works</option>
+                        <option value="manpower">Manpower Supply / Housekeeping / Upkeeping</option>
+                        <option value="horticulture">Horticulture / Agriculture / Lawn Maintenance</option>
+                        <option value="weighbridge">Servicing / Maintenance of Weighbridges</option>
+                        <option value="custom">Custom (Manual Entry)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="estimate_value">Estimate Value (Excl. GST) <span class="required">*</span></label>
+                    <input type="text" id="estimate_value" name="estimate_value" required
+                           placeholder="e.g., Rs. 50,00,000">
+                </div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="check_applicability" name="check_applicability">
+                        <label for="check_applicability">
+                            <strong>Applicability:</strong><br>
+                            All tenders of value Rs.25 lakhs & above
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Technical Requirements -->
+                <div class="section-title">Technical Requirements</div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="check_tech_exp" name="check_tech_exp">
+                        <label for="check_tech_exp"><strong>Technical Experience</strong></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <textarea id="tech_experience" name="tech_experience" rows="3"></textarea>
+                </div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="check_nature_works" name="check_nature_works">
+                        <label for="check_nature_works"><strong>Nature of Works</strong></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <textarea id="nature_of_works" name="nature_of_works" rows="5"></textarea>
+                </div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="check_location" name="check_location">
+                        <label for="check_location"><strong>Location of Work</strong></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <textarea id="location_of_work" name="location_of_work" rows="3"></textarea>
+                </div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="check_value_opt1" name="check_value_opt1">
+                        <label for="check_value_opt1"><strong>Minimum Value Option 1</strong></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <textarea id="value_option_1" name="value_option_1" rows="2"></textarea>
+                </div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="check_value_opt2" name="check_value_opt2">
+                        <label for="check_value_opt2"><strong>Minimum Value Option 2</strong></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <textarea id="value_option_2" name="value_option_2" rows="3"></textarea>
+                </div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="check_license" name="check_license">
+                        <label for="check_license"><strong>License Requirement</strong></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <textarea id="license_requirement" name="license_requirement" rows="3"></textarea>
+                </div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="check_gen_work" name="check_gen_work">
+                        <label for="check_gen_work"><strong>General Work Experience</strong></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <textarea id="general_work_experience" name="general_work_experience" rows="4"></textarea>
+                </div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="check_general_license" name="check_general_license">
+                        <label for="check_general_license"><strong>General License</strong></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <textarea id="general_license" name="general_license" rows="2"></textarea>
+                </div>
+
+                <!-- Financial Requirements -->
+                <div class="section-title">Financial Requirements</div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="check_turnover" name="check_turnover">
+                        <label for="check_turnover"><strong>Turnover Requirement</strong></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <textarea id="turnover_requirement" name="turnover_requirement" rows="2">Average Annual Turnover of the bidder in last 3 financial years immediately preceding the scheduled tender opening date should not be less than 30% of the annualized tender value, rounded to lowest thousands.</textarea>
+                </div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="check_networth" name="check_networth">
+                        <label for="check_networth"><strong>Net Worth Requirement</strong></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <textarea id="net_worth_requirement" name="net_worth_requirement" rows="2">Bidder must have positive Net Worth as per the latest standalone audited financial statement.</textarea>
+                </div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="check_fin_doc" name="check_fin_doc">
+                        <label for="check_fin_doc"><strong>Financial Documentation</strong></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <textarea id="financial_documentation" name="financial_documentation" rows="3">Copies of standalone audited financial statement (Profit & Loss account and Balance Sheet) for three financial years immediately preceding the original scheduled tender opening date are to be furnished. (No financial criteria for estimates < Rs.50 lakhs.)</textarea>
+                </div>
+
+                <!-- Documentation Requirements -->
+                <div class="section-title">Documentation Requirements</div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="req_work_order" name="req_work_order">
+                        <label for="req_work_order"><strong>8.1 Work Order/LOA/Agreement</strong></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <textarea id="req_work_order_text" name="req_work_order_text" rows="1">Enclose copy for each relevant work.</textarea>
+                </div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="req_completion_cert" name="req_completion_cert">
+                        <label for="req_completion_cert"><strong>8.2 Completion Certificate</strong></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <textarea id="req_completion_cert_text" name="req_completion_cert_text" rows="2">Enclose copy of end-user execution/completion certificate/finalisation order with work name, LOA/agreement no., period, executed value.</textarea>
+                </div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="req_license_copy" name="req_license_copy">
+                        <label for="req_license_copy"><strong>8.3 License Copy</strong></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <textarea id="req_license_copy_text" name="req_license_copy_text" rows="1">Attested copy of valid license (Notary/Gazetted/CA), if under renewal attach proof.</textarea>
+                </div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="note_captive_exclusion" name="note_captive_exclusion">
+                        <label for="note_captive_exclusion"><strong>8.4 Exclusion</strong></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <textarea id="note_captive_exclusion_text" name="note_captive_exclusion_text" rows="2">Documentary evidences of work executed in Captive or Process steam power plants will not be considered for evaluation.</textarea>
+                </div>
+
+                <!-- Additional Notes -->
+                <div class="section-title">Additional Notes</div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="note_new_firm_turnover" name="note_new_firm_turnover">
+                        <label for="note_new_firm_turnover"><strong>N1 - New Firm Turnover Calculation</strong></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <textarea id="note_new_firm_turnover_text" name="note_new_firm_turnover_text" rows="5">If <3 years old:
+- 1 year financials: turnover/3
+- 2 years: both turnovers/3
+If current year under audit, use previous 3 FYs
+(Attach self-certificate if financials are under audit)</textarea>
+                </div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="note_turnover_definition" name="note_turnover_definition">
+                        <label for="note_turnover_definition"><strong>N2 - Turnover Definition</strong></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <textarea id="note_turnover_definition_text" name="note_turnover_definition_text" rows="1">Turnover = Revenue from operation as per financial statement (excluding other income)</textarea>
+                </div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="note_networth_companies" name="note_networth_companies">
+                        <label for="note_networth_companies"><strong>N3 - Net Worth Calculation (Companies)</strong></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <textarea id="note_networth_companies_text" name="note_networth_companies_text" rows="3">Paid-up Share Capital + Share Application Money Pending Allotment + Reserves – Accumulated Losses – Deferred Expenditure not written off; only reserves from profits & securities premium; exclude revaluation, writeback, amalgamation</textarea>
+                </div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="note_networth_proprietor" name="note_networth_proprietor">
+                        <label for="note_networth_proprietor"><strong>N4 - Net Worth (Proprietor/Firm)</strong></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <textarea id="note_networth_proprietor_text" name="note_networth_proprietor_text" rows="1">Net Worth = Total Assets – Total Liabilities</textarea>
+                </div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="note_multi_agreement" name="note_multi_agreement">
+                        <label for="note_multi_agreement"><strong>N5 - Multi-Agreement</strong></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <textarea id="note_multi_agreement_text" name="note_multi_agreement_text" rows="1">Multiple agreements may be considered with justification</textarea>
+                </div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="note_exclude_gst" name="note_exclude_gst">
+                        <label for="note_exclude_gst"><strong>N7 - Value Exclusion</strong></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <textarea id="note_exclude_gst_text" name="note_exclude_gst_text" rows="1">All values exclude GST/Service Taxes</textarea>
+                </div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="note_partnership" name="note_partnership">
+                        <label for="note_partnership"><strong>N8 - Partnership Rules</strong></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <textarea id="note_partnership_text" name="note_partnership_text" rows="2">See partnership compliance/undertakings as per NTPL circular & tender (experience OK for firm/partners, financials required for firm, partner giving experience must undertake not to withdraw, etc.)</textarea>
+                </div>
+
+                <!-- Similar Work & Changes -->
+                <div class="section-title">Additional Information</div>
+
+                <div class="form-group">
+                    <label for="similar_work">Details of Similar Work Done Earlier (Optional)</label>
+                    <textarea id="similar_work" name="similar_work"
+                              placeholder="e.g., LOA No., Tender Document No., etc."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="changes_contemplated">Changes Contemplated (Optional)</label>
+                    <textarea id="changes_contemplated" name="changes_contemplated"
+                              placeholder="Default: Financial requirements and Note modified in accordance with the PQR Standardisation circular."></textarea>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">Reset Form</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">Generate Report</button>
+                </div>
+            </form>
+
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Generating report...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('pqrForm');
+        const loading = document.getElementById('loading');
+        const submitBtn = document.getElementById('submitBtn');
+        const alertDiv = document.getElementById('alert');
+
+        function showAlert(message, type) {
+            alertDiv.textContent = message;
+            alertDiv.className = `alert ${type} active`;
+            setTimeout(() => {
+                alertDiv.className = 'alert';
+            }, 5000);
+        }
+
+        function resetForm() {
+            form.reset();
+            showAlert('Form has been reset', 'success');
+        }
+
+        // Auto-fill function - pqrTemplates loaded from external JS file
+        document.getElementById('work_type').addEventListener('change', function() {
+            const workType = this.value;
+            if (!workType || workType === 'custom') return;
+
+            const template = pqrTemplates[workType];
+            if (!template) return;
+
+            // Clear all technical fields first
+            const technicalFields = [
+                'tech_experience',
+                'nature_of_works',
+                'location_of_work',
+                'value_option_1',
+                'value_option_2',
+                'license_requirement',
+                'general_work_experience',
+                'general_license'
+            ];
+
+            technicalFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.value = '';
+                }
+            });
+
+            // Fill in the template values
+            for (const [key, value] of Object.entries(template)) {
+                const textarea = document.getElementById(key);
+                if (textarea) {
+                    textarea.value = value;
+                }
+            }
+
+            showAlert(`Auto-filled PQR template for ${this.options[this.selectedIndex].text}`, 'success');
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Collect form data
+            const formData = new FormData(form);
+            const data = {};
+
+            // Convert FormData to JSON object
+            for (let [key, value] of formData.entries()) {
+                // Only treat checkbox inputs as boolean true
+                const element = form.elements[key];
+                if (element && element.type === 'checkbox') {
+                    data[key] = true;
+                } else {
+                    data[key] = value;
+                }
+            }
+
+            // Show loading state
+            loading.classList.add('active');
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/generate-report', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to generate report');
+                }
+
+                // Get the blob from response
+                const blob = await response.blob();
+
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Standing_Committee_Report_${new Date().toISOString().slice(0,10)}.docx`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                showAlert('Report generated successfully!', 'success');
+
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error generating report: ' + error.message, 'error');
+            } finally {
+                loading.classList.remove('active');
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
