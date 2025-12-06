@@ -488,15 +488,18 @@ def health_check():
     return jsonify({'status': 'healthy', 'timestamp': datetime.now().isoformat()})
 
 
-if __name__ == '__main__':
-    # Create templates directory if it doesn't exist
-    os.makedirs('templates', exist_ok=True)
+    if __name__ == '__main__':
+        # Create templates directory if it doesn't exist
+        os.makedirs('templates', exist_ok=True)
 
-    print("=" * 80)
-    print("PQR REPORT GENERATOR - Starting Flask Server")
-    print("=" * 80)
-    print("\nServer will be available at: http://localhost:8001")
-    print("\nPress CTRL+C to stop the server")
-    print("=" * 80)
+        print("=" * 80)
+        print("PQR REPORT GENERATOR - Starting Flask Server")
+        print("=" * 80)
+        
+        # Use PORT from environment (Railway) or default to 8001
+        port = int(os.environ.get('PORT', 8001))
+        print(f"\nServer will be available at: http://localhost:{port}")
+        print("\nPress CTRL+C to stop the server")
+        print("=" * 80)
 
-    app.run(debug=True, host='0.0.0.0', port=8001)
+        app.run(debug=True, host='0.0.0.0', port=port)
