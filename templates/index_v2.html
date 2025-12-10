@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PQR Checklist - Checkbox Only</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .form-section {
+            padding: 30px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin: 25px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input[type="text"],
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .checkbox-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 4px;
+            border-left: 4px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .checkbox-item:hover {
+            background: #f0f7ff;
+            border-left-color: #667eea;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 15px;
+            margin-top: 3px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .checkbox-item label {
+            cursor: pointer;
+            flex: 1;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .checkbox-item label .item-code {
+            font-weight: 600;
+            color: #667eea;
+            margin-right: 8px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert.active {
+            display: block;
+        }
+
+        .required {
+            color: #e74c3c;
+        }
+
+        .info-text {
+            color: #666;
+            font-size: 13px;
+            font-style: italic;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ELECTRICAL WORKS / ELECTRICAL MAINTENANCE</h1>
+            <p>PQR CHECKLIST - Just check the boxes that apply!</p>
+        </div>
+
+        <div class="form-section">
+            <div id="alert" class="alert"></div>
+
+            <form id="pqrForm">
+                <!-- Basic Information -->
+                <div class="section-title">Basic Information</div>
+
+                <div class="form-group">
+                    <label for="work_name">Name of Work <span class="required">*</span></label>
+                    <input type="text" id="work_name" name="work_name" required
+                           placeholder="e.g., Electrical Works / Electrical Maintenance Works">
+                </div>
+
+                <div class="form-group">
+                    <label for="work_period">Period of Work <span class="required">*</span></label>
+                    <input type="text" id="work_period" name="work_period" required
+                           placeholder="e.g., 24 months from start of work">
+                </div>
+
+                <div class="form-group">
+                    <label for="work_nature">Nature of Work <span class="required">*</span></label>
+                    <select id="work_nature" name="work_nature" required>
+                        <option value="">Select...</option>
+                        <option value="AMC">AMC (Annual Maintenance Contract)</option>
+                        <option value="BMC">BMC (Biennial Maintenance Contract)</option>
+                        <option value="AMC/BMC/Short Term">AMC/BMC/Short Term</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="estimate_value">Estimate Value (Excl. GST) <span class="required">*</span></label>
+                    <input type="text" id="estimate_value" name="estimate_value" required
+                           placeholder="e.g., Rs. 50,00,000">
+                </div>
+
+                <!-- Technical Requirements -->
+                <div class="section-title">1. Technical Requirements - Check all that apply</div>
+
+                <div class="checkbox-section">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="check_value_opt1" name="check_value_opt1">
+                        <label for="check_value_opt1">
+                            <span class="item-code">5.4</span>
+                            Single agreement costing not less than 30% of Est. Value for BMC or 40% of Est. Value for AMC
+                        </label>
+                    </div>
+
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="check_value_opt2" name="check_value_opt2">
+                        <label for="check_value_opt2">
+                            <span class="item-code">5.5</span>
+                            Single agreement costing not less than 15% of Est. Value for BMC or 20% for AMC, AND any other Electrical Maintenance work for a minimum value of 30% (BMC) or 40% (AMC)
+                        </label>
+                    </div>
+
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="check_location" name="check_location">
+                        <label for="check_location">
+                            <span class="item-code">5.3</span>
+                            Works executed in major process industries (Thermal Power Station, Fertilizer Plant, etc.) in Govt/PSU within last 7 years
+                        </label>
+                    </div>
+
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="check_license" name="check_license">
+                        <label for="check_license">
+                            <span class="item-code">5.6</span>
+                            Valid Electrical License (ESA) issued by State Electrical Licensing Board required
+                        </label>
+                    </div>
+
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="check_tech_exp" name="check_tech_exp">
+                        <label for="check_tech_exp">
+                            <span class="item-code">5.1</span>
+                            Construction, Testing & Commissioning works OR Maintenance works in Electrical systems/equipment
+                        </label>
+                    </div>
+
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="check_nature_works" name="check_nature_works">
+                        <label for="check_nature_works">
+                            <span class="item-code">5.2</span>
+                            Works must include minimum two of: HT Transformers, HT rotating machines, HT Switchgears, Switchyard equipment
+                        </label>
+                    </div>
+
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="check_gen_work" name="check_gen_work">
+                        <label for="check_gen_work">
+                            <span class="item-code">6.1</span>
+                            General Electrical Work experience in last 7 years (1 work ≥80% OR 2 works ≥50% OR 3 works ≥40% of tender value)
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Financial Requirements -->
+                <div class="section-title">2. Financial Requirements - Check all that apply</div>
+
+                <div class="checkbox-section">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="check_turnover" name="check_turnover">
+                        <label for="check_turnover">
+                            <span class="item-code">7.1</span>
+                            Average Annual Turnover in last 3 FYs ≥ 30% of annualized tender value
+                        </label>
+                    </div>
+
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="check_networth" name="check_networth">
+                        <label for="check_networth">
+                            <span class="item-code">7.2</span>
+                            Positive Net Worth as per latest standalone audited financials
+                        </label>
+                    </div>
+
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="check_fin_doc" name="check_fin_doc">
+                        <label for="check_fin_doc">
+                            <span class="item-code">7.3</span>
+                            Submit standalone audited P&L and Balance Sheet for 3 FYs
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Documentation Requirements -->
+                <div class="section-title">3. Documentation Requirements</div>
+
+                <div class="checkbox-section">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="req_work_order" name="req_work_order" checked>
+                        <label for="req_work_order">
+                            <span class="item-code">8.1</span>
+                            Work Order/LOA/Agreement copy required
+                        </label>
+                    </div>
+
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="req_completion_cert" name="req_completion_cert" checked>
+                        <label for="req_completion_cert">
+                            <span class="item-code">8.2</span>
+                            Completion Certificate required
+                        </label>
+                    </div>
+
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="req_license_copy" name="req_license_copy" checked>
+                        <label for="req_license_copy">
+                            <span class="item-code">8.3</span>
+                            Attested License Copy required
+                        </label>
+                    </div>
+
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="note_captive_exclusion" name="note_captive_exclusion">
+                        <label for="note_captive_exclusion">
+                            <span class="item-code">N6</span>
+                            Exclude captive/process steam plant works from evaluation
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Additional Notes -->
+                <div class="section-title">4. Additional Conditions</div>
+
+                <div class="checkbox-section">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="note_new_firm_turnover" name="note_new_firm_turnover" checked>
+                        <label for="note_new_firm_turnover">
+                            <span class="item-code">N1</span>
+                            Include turnover calculation rules for firms less than 3 years old
+                        </label>
+                    </div>
+
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="note_partnership" name="note_partnership" checked>
+                        <label for="note_partnership">
+                            <span class="item-code">N8</span>
+                            Include all partnership firm conditions and restrictions
+                        </label>
+                    </div>
+
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="note_exclude_gst" name="note_exclude_gst" checked>
+                        <label for="note_exclude_gst">
+                            <span class="item-code">N7</span>
+                            All values exclude GST/Service Taxes
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Optional Fields -->
+                <div class="section-title">5. Additional Information (Optional)</div>
+
+                <div class="form-group">
+                    <label for="similar_work">Details of Similar Work Done Earlier</label>
+                    <input type="text" id="similar_work" name="similar_work"
+                           placeholder="e.g., LOA No., Tender Document No.">
+                </div>
+
+                <div class="form-group">
+                    <label for="changes_contemplated">Changes Contemplated</label>
+                    <input type="text" id="changes_contemplated" name="changes_contemplated"
+                           placeholder="Leave blank for default text">
+                    <div class="info-text">Default: "Financial requirements and Note modified in accordance with the PQR Standardisation circular."</div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">Reset Form</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">Generate Report</button>
+                </div>
+            </form>
+
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Generating report...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('pqrForm');
+        const loading = document.getElementById('loading');
+        const submitBtn = document.getElementById('submitBtn');
+        const alertDiv = document.getElementById('alert');
+
+        function showAlert(message, type) {
+            alertDiv.textContent = message;
+            alertDiv.className = `alert ${type} active`;
+            setTimeout(() => {
+                alertDiv.className = 'alert';
+            }, 5000);
+        }
+
+        function resetForm() {
+            form.reset();
+            showAlert('Form has been reset', 'success');
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Collect form data
+            const formData = new FormData(form);
+            const data = {};
+
+            // Get text fields
+            for (let [key, value] of formData.entries()) {
+                if (!key.startsWith('check_') && !key.startsWith('req_') && !key.startsWith('note_')) {
+                    data[key] = value;
+                }
+            }
+
+            // Get all checkboxes (including unchecked ones)
+            const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                data[checkbox.name] = checkbox.checked;
+            });
+
+            // Show loading
+            loading.classList.add('active');
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/generate-report', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to generate report');
+                }
+
+                // Download the file
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Standing_Committee_Report_${new Date().toISOString().slice(0,10)}.docx`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                showAlert('Report generated successfully!', 'success');
+
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error generating report: ' + error.message, 'error');
+            } finally {
+                loading.classList.remove('active');
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
