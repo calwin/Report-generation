@@ -451,7 +451,7 @@ class ReportGenerator:
 @app.route('/')
 def index():
     """Serve the main form page"""
-    return render_template('index.html')
+    return render_template('index_improved.html')
 
 
 @app.route('/api/generate-report', methods=['POST'])
