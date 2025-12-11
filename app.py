@@ -500,6 +500,9 @@ def health_check():
 
 
 if __name__ == '__main__':
+    import webbrowser
+    import threading
+    
     # Create templates directory if it doesn't exist
     os.makedirs('templates', exist_ok=True)
 
@@ -507,10 +510,23 @@ if __name__ == '__main__':
     print("PQR REPORT GENERATOR - Starting Flask Server")
     print("=" * 80)
     
-    # Use PORT from environment (Railway) or default to 8001
+    # Use PORT from environment or default to 8001
     port = int(os.environ.get('PORT', 8001))
-    print(f"\nServer will be available at: http://localhost:{port}")
+    url = f"http://localhost:{port}"
+    
+    print(f"\nServer will be available at: {url}")
+    print("\nOpening browser automatically...")
     print("\nPress CTRL+C to stop the server")
     print("=" * 80)
-
-    app.run(debug=True, host='0.0.0.0', port=port)
+    
+    # Auto-open browser after short delay (only when running directly, not as service)
+    def open_browser():
+        import time
+        time.sleep(1.5)  # Wait for server to start
+        webbrowser.open(url)
+    
+    # Only open browser if not running as a service (check for frozen exe running interactively)
+    if os.environ.get('RUNNING_AS_SERVICE') != '1':
+        threading.Thread(target=open_browser, daemon=True).start()
+    
+    app.run(debug=False, host='0.0.0.0', port=port)

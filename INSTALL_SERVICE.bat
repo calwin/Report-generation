@@ -42,6 +42,7 @@ nssm set PQRReportGenerator Description "Web application for generating PQR Stan
 nssm set PQRReportGenerator Start SERVICE_AUTO_START
 nssm set PQRReportGenerator AppStdout "%APPDIR%service.log"
 nssm set PQRReportGenerator AppStderr "%APPDIR%service.log"
+nssm set PQRReportGenerator AppEnvironmentExtra RUNNING_AS_SERVICE=1
 
 echo.
 echo Starting service...
