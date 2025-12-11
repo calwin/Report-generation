@@ -413,6 +413,29 @@
             color: #e74c3c;
         }
 
+        /* Simplified PQR Notice */
+        .simplified-notice {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            border: 2px solid #ff9800;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .simplified-notice h4 {
+            color: #e65100;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .simplified-notice p {
+            color: #bf360c;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
         /* Progress Indicator */
         .progress-bar {
             display: flex;
@@ -587,34 +610,50 @@
 
                 <!-- Value Calculator -->
                 <div class="value-calculator" id="valueCalculator" style="display: none;">
-                    <h4>💰 Auto-Calculated PQR Values</h4>
+                    <h4>💰 Auto-Calculated PQR Values (Reference)</h4>
+                    <p style="font-size: 12px; color: #666; margin-bottom: 15px;">Use these values to fill in the
+                        Rs.......... fields</p>
                     <div class="calculated-values">
                         <div class="calc-item">
-                            <div class="label">Option 1 (Single Agreement)</div>
+                            <div class="label">Option 1 <span id="opt1Percent">(30% BMC / 40% AMC)</span></div>
                             <div class="value" id="calcOpt1">Rs. --</div>
                         </div>
                         <div class="calc-item">
-                            <div class="label">Option 2 (Specific Work)</div>
+                            <div class="label">Option 2 - Specific <span id="opt2SpecPercent">(15% BMC / 20% AMC)</span>
+                            </div>
                             <div class="value" id="calcOpt2Specific">Rs. --</div>
                         </div>
                         <div class="calc-item">
-                            <div class="label">Option 2 (Other Work)</div>
+                            <div class="label">Option 2 - Other <span id="opt2OtherPercent">(30% BMC / 40% AMC)</span>
+                            </div>
                             <div class="value" id="calcOpt2Other">Rs. --</div>
                         </div>
                         <div class="calc-item">
-                            <div class="label">Min Turnover (30%)</div>
+                            <div class="label">Min Turnover (30% of annualized value)</div>
                             <div class="value" id="calcTurnover">Rs. --</div>
                         </div>
                     </div>
                 </div>
 
-                <div class="checkbox-group">
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="check_applicability" name="check_applicability">
-                        <label for="check_applicability">
-                            <strong>Applicability:</strong> All tenders of value Rs.25 lakhs & above
-                        </label>
-                    </div>
+                <!-- Applicability Dropdown -->
+                <div class="form-group">
+                    <label for="applicability">PQR Applicability <span class="required">*</span></label>
+                    <select id="applicability" name="applicability" required onchange="handleApplicabilityChange()">
+                        <option value="">Select...</option>
+                        <option value="above_25">≥ Rs.25 Lakhs (Detailed PQR)</option>
+                        <option value="below_25">
+                            < Rs.25 Lakhs (Simplified PQR)</option>
+                    </select>
+                </div>
+
+                <!-- Simplified PQR Notice (shows when < 25 lakhs selected) -->
+                <div class="simplified-notice" id="simplifiedNotice" style="display: none;">
+                    <h4>⚡ SIMPLIFIED PQR</h4>
+                    <p>For tenders with value <strong>less than Rs.25 lakhs</strong>, only Technical Experience is
+                        required:</p>
+                    <p id="simplifiedPQRText"
+                        style="font-style: italic; background: white; padding: 12px; border-radius: 8px; margin-top: 10px;">
+                    </p>
                 </div>
 
                 <!-- Technical Requirements - Collapsible -->
@@ -998,8 +1037,79 @@ vi. In the case of partnership firm, documentary evidence for the works executed
             return 'Rs. ' + value.toLocaleString('en-IN');
         }
 
+        // Handle applicability dropdown change
+        function handleApplicabilityChange() {
+            const applicability = document.getElementById('applicability').value;
+            const simplifiedNotice = document.getElementById('simplifiedNotice');
+            const techSection = document.getElementById('techSection');
+            const finSection = document.getElementById('finSection');
+            const docSection = document.getElementById('docSection');
+            const notesSection = document.getElementById('notesSection');
+            const valueCalculator = document.getElementById('valueCalculator');
+
+            if (applicability === 'below_25') {
+                // Simplified PQR - show notice, hide detailed sections
+                simplifiedNotice.style.display = 'block';
+                valueCalculator.style.display = 'none';
+
+                // Generate simplified PQR text with calculated 40% value
+                const estimateInput = document.getElementById('estimate_value').value;
+                const estimate = parseFloat(estimateInput.replace(/[^0-9.]/g, ''));
+                const workTypeSelect = document.getElementById('work_type');
+                let workTypeName = '..........';
+                if (workTypeSelect && workTypeSelect.selectedIndex > 0) {
+                    workTypeName = workTypeSelect.options[workTypeSelect.selectedIndex].text;
+                }
+
+                let valueText = '40% of tender value';
+                if (!isNaN(estimate) && estimate > 0) {
+                    const minValue = Math.floor((estimate * 0.40) / 1000) * 1000;
+                    valueText = 'Rs. ' + minValue.toLocaleString('en-IN') + ' (40% of tender value)';
+                }
+
+                const simplifiedText = `"The bidder should have executed any ${workTypeName} work within the last (7) Seven years prior to the original scheduled date of tender opening in any Government / Quasi Government / PSU / PSE / Public Limited Company / Independent Power Plant directly in their own name / in the name of any one of the partners for a value not less than ${valueText} in a single agreement."`;
+                document.getElementById('simplifiedPQRText').textContent = simplifiedText;
+
+                // Auto-fill tech_experience with simplified text
+                document.getElementById('tech_experience').value = simplifiedText.replace(/"/g, '');
+                document.getElementById('check_tech_exp').checked = true;
+
+                // Collapse other sections
+                finSection.classList.add('collapsed');
+                docSection.classList.add('collapsed');
+                notesSection.classList.add('collapsed');
+
+                showAlert('Simplified PQR applied for tender value < Rs.25 lakhs', 'success');
+            } else if (applicability === 'above_25') {
+                // Detailed PQR - hide notice, show calculator
+                simplifiedNotice.style.display = 'none';
+                calculateValues();
+
+                // Expand sections
+                techSection.classList.remove('collapsed');
+                finSection.classList.remove('collapsed');
+
+                showAlert('Detailed PQR for tender value ≥ Rs.25 lakhs', 'success');
+            } else {
+                simplifiedNotice.style.display = 'none';
+            }
+        }
+
+
         // Update nature change to recalculate
-        document.getElementById('work_nature').addEventListener('change', calculateValues);
+        document.getElementById('work_nature').addEventListener('change', function () {
+            calculateValues();
+            handleApplicabilityChange();
+        });
+
+        // Update when estimate changes
+        document.getElementById('estimate_value').addEventListener('input', function () {
+            calculateValues();
+        });
+
+        document.getElementById('estimate_value').addEventListener('blur', function () {
+            handleApplicabilityChange();
+        });
 
         function showAlert(message, type) {
             alertDiv.textContent = message;
@@ -1093,6 +1203,10 @@ vi. In the case of partnership firm, documentary evidence for the works executed
             // Expand the technical section
             const techSection = document.getElementById('techSection');
             techSection.classList.remove('collapsed');
+
+
+            // Also update simplified PQR if applicable
+            handleApplicabilityChange();
 
             showAlert(`Auto-filled PQR template for ${this.options[this.selectedIndex].text}`, 'success');
         });
