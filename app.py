@@ -12,8 +12,19 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from datetime import datetime
 import os
 import io
+import sys
 
-app = Flask(__name__)
+# PyInstaller compatibility - get correct base path
+if getattr(sys, 'frozen', False):
+    # Running as compiled exe
+    BASE_DIR = sys._MEIPASS
+else:
+    # Running as script
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+app = Flask(__name__, 
+            template_folder=os.path.join(BASE_DIR, 'templates'),
+            static_folder=os.path.join(BASE_DIR, 'static'))
 CORS(app)
 
 class ReportGenerator:
